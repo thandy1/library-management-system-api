@@ -1,0 +1,23 @@
+# Documentation
+docs/*
+
+# Virtual Environment
+venv/
+
+# Cache
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Database files (for future use)
+*.db
+*.sqlite

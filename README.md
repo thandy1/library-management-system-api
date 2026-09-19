@@ -22,4 +22,42 @@ Data is stored in application memory for this milestone. Assignment 2 will add d
 
 ## Installation
 
-TBD
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd library-management-system-api
+```
+
+2. Create a virtual environment:
+```bash
+python -m venv venv
+```
+
+
+3. Activate the virtual environment
+```bash
+# Mac/Linux: 
+source venv/bin/activate
+
+# Windows
+venv/Scripts/activate
+```
+
+4. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+5. Running the project
+Start the API server:
+```bash
+uvicorn app.main:app --reload
+```
+
+The API will be available at `http://localhost:8000`
+
+Access the interactive API documentation:
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+Test all endpoints and business logic directly in Swagger UI.
