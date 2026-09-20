@@ -22,39 +22,28 @@ Data is stored in application memory for this milestone. Assignment 2 will add d
 
 ## Installation
 
-1. Clone the repository:
+### 1. Clone the repository
+Run these commands in your terminal:
 ```bash
 git clone <your-repo-url>
 cd library-management-system-api
+git switch assignment-<assignment-number>
 ```
 
-2. Create a virtual environment:
+### 2. Install project dependencies   
+From the `library-management-system-api` folder, run:
 ```bash
-python -m venv venv
+uv sync
 ```
+`uv` will automatically handle and install the virtual environment and dependencies.
 
-
-3. Activate the virtual environment
-```bash
-# Mac/Linux: 
-source venv/bin/activate
-
-# Windows
-venv/Scripts/activate
-```
-
-4. Install dependencies
-```bash
-pip install -r requirements.txt
-```
-
-5. Running the project
+### 3. Running the project
 Start the API server:
 ```bash
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
-The API will be available at `http://localhost:8000`
+The development server will be available at `http://localhost:8000`.
 
 Access the interactive API documentation:
 - **Swagger UI**: http://localhost:8000/docs
