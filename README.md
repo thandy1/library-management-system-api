@@ -1,6 +1,6 @@
 # Library Management System API
 
-A REST API for managing library books and members, built with FastAPI and Pydantic. This is Assignment 1 for SDEV 3310 (API Design and Development).
+A REST API for managing library books and members, built with FastAPI and Pydantic. 
 
 ## Overview
 
