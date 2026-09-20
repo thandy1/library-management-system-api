@@ -35,7 +35,7 @@ From the `library-management-system-api` folder, run:
 ```bash
 uv sync
 ```
-`uv` will automatically handle and install the virtual environment and dependencies.
+This installs dependencies from `uv.lock`. (Alternatively, `uv run` will automatically install dependencies when you start the server.)
 
 ### 3. Running the project
 Start the API server:
