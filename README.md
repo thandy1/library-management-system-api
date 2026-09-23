@@ -113,18 +113,18 @@ DELETE http://localhost:8000/members/1
 ```
 library-management-system-api/
 ├── app/
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── books.py         # Book CRUD endpoints
+│   │   └── members.py       # Member CRUD endpoints
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── book.py          # Book request/response schemas
+│   │   └── member.py        # Member request/response schemas
 │   ├── __init__.py
 │   ├── main.py              # FastAPI app and route registration
-│   └── routes/
-│       ├── __init__.py
-│       ├── books.py         # Book CRUD endpoints
-│       └── members.py       # Member CRUD endpoints
-├── schemas/
-│   ├── __init__.py
-│   ├── books.py             # Book request/response schemas
-│   └── members.py           # Member request/response schemas
-├── helpers.py               # Validation and utility functions
-├── storage.py               # In-memory data storage
+│   ├── helpers.py           # Validation and utility functions
+│   └── storage.py           # In-memory data storage
 ├── pyproject.toml           # Project dependencies and metadata
 ├── uv.lock                  # Locked dependency versions
 ├── README.md                # This file
