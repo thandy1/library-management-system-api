@@ -1,5 +1,6 @@
 """Request and response schema for the Member resource."""
 
+
 from pydantic import BaseModel, ConfigDict, Field, EmailStr
 
 
@@ -19,11 +20,11 @@ class Member(BaseModel):
         description="Member email address (must be unique)"
     )
     membership_id: str = Field(
-        description="Unique membership identifier"
+        description="Member membership ID (must be unique)"
     )
     phone: str = Field(
-        # Validation rule for formatting phone numbers.
-        description="Member phone number (format: XXX-XXXX)"
+        pattern=r"^\d{3}-\d{3}-\d{4}$",
+        description="Member phone number (format: xxx-XXX-XXXX, e.g., 555-123-4567)"
     )
 
 class MemberRequest(Member):

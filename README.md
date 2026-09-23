@@ -18,27 +18,23 @@ Data is stored in application memory for this milestone. Assignment 2 will add d
 - **FastAPI** - Modern Python web framework for building REST APIs
 - **Pydantic** - Data validation using Python type hints
 - **Uvicorn** - ASGI server to run the application
-- **Python 3.9+**
+- **Python 3.10+**
 
 ## Installation
 
 ### 1. Clone the repository
-Run these commands in your terminal:
 ```bash
 git clone <your-repo-url>
 cd library-management-system-api
-git switch assignment-<assignment-number>
+git switch assignment-1
 ```
 
 ### 2. Install project dependencies   
-From the `library-management-system-api` folder, run:
 ```bash
 uv sync
 ```
-This installs dependencies from `uv.lock`. (Alternatively, `uv run` will automatically install dependencies when you start the server.)
 
 ### 3. Running the project
-Start the API server:
 ```bash
 uv run uvicorn app.main:app --reload
 ```
@@ -49,4 +45,88 @@ Access the interactive API documentation:
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 
-Test all endpoints and business logic directly in Swagger UI.
+## Example Requests
+
+### Create a Member
+```bash
+POST http://localhost:8000/members
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "membership_id": "MEM001",
+  "phone": "555-1234"
+}
+```
+
+### Create a Book
+```bash
+POST http://localhost:8000/books
+Content-Type: application/json
+
+{
+  "title": "The Great Gatsby",
+  "author": "F. Scott Fitzgerald",
+  "isbn": "9780743273565",
+  "published_year": 1925,
+  "member_id": 1
+}
+```
+
+### Get All Books
+```bash
+GET http://localhost:8000/books
+```
+
+### Get Books for a Member
+```bash
+GET http://localhost:8000/members/1/books
+```
+
+### Update a Book
+```bash
+PUT http://localhost:8000/books/1
+Content-Type: application/json
+
+{
+  "title": "The Great Gatsby (Revised)",
+  "author": "F. Scott Fitzgerald",
+  "isbn": "9780743273565",
+  "published_year": 1925,
+  "member_id": 1
+}
+```
+
+### Delete a Book
+```bash
+DELETE http://localhost:8000/books/1
+```
+
+### Delete a Member (only if no active books)
+```bash
+DELETE http://localhost:8000/members/1
+```
+
+## Project Structure
+
+```
+library-management-system-api/
+├── app/
+│   ├── __init__.py
+│   ├── main.py              # FastAPI app and route registration
+│   └── routes/
+│       ├── __init__.py
+│       ├── books.py         # Book CRUD endpoints
+│       └── members.py       # Member CRUD endpoints
+├── schemas/
+│   ├── __init__.py
+│   ├── books.py             # Book request/response schemas
+│   └── members.py           # Member request/response schemas
+├── helpers.py               # Validation and utility functions
+├── storage.py               # In-memory data storage
+├── pyproject.toml           # Project dependencies and metadata
+├── uv.lock                  # Locked dependency versions
+├── README.md                # This file
+└── .gitignore
+```

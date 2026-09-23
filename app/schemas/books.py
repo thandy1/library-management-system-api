@@ -1,5 +1,6 @@
 """Request and response schemas for the Book resource."""
 
+
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 
