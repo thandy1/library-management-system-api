@@ -19,7 +19,7 @@ class Book(BaseModel):
         )
     author: str = Field(
         min_length=1,
-        max_length=200,
+        max_length=120,
         description="Book Author"
     )
     isbn: str = Field(
@@ -27,7 +27,7 @@ class Book(BaseModel):
     )
     published_year: int = Field(
         ge=1450,
-        le=2026,
+        le=datetime.now().year,
         description="Year the book was published"
     )
     member_id: int = Field(

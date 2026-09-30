@@ -17,7 +17,7 @@ router = APIRouter(prefix="/books", tags=["Books"])
     response_model=BookResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new book",
-    description="Create a book from a validated request body."
+    description="Create a book from a validated request body.",
 )
 def create_book(request: BookRequest) -> BookResponse:
     """Create a book from a validated JSON request body."""
@@ -70,7 +70,7 @@ def get_book(book_id: int) -> BookResponse:
 def update_book(book_id: int, request: BookRequest) -> BookResponse:
     """Update the editable fields of an existing book."""
     validate_book_exists(book_id)
-    validate_isbn(request)
+    validate_isbn(request, exclude_book_id=book_id)
     validate_member_exists(request.member_id)
     updated_book = BookResponse(
         id=book_id,

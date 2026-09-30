@@ -16,9 +16,9 @@ def validate_book_exists(book_id: int) -> None:
         )
 
 
-def validate_isbn(request: BookRequest) -> None:
+def validate_isbn(request: BookRequest, exclude_book_id: int | None = None) -> None:
     """Raise 400 if the ISBN isn't unique."""
-    if any(book.isbn == request.isbn for book in books.values()):
+    if any(book.isbn == request.isbn and book.id != exclude_book_id for book in books.values()):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="ISBN must be unique"
@@ -38,7 +38,7 @@ def validate_email_unique(email: str, exclude_member_id: int | None = None) -> N
         # Only reject if the email belongs to a DIFFERENT member.
         if member.email == email and member.id != exclude_member_id:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_409_CONFLICT,
                 detail="Email must be unique"
             )
 
@@ -50,7 +50,7 @@ def validate_membership_id_unique(membership_id: str, exclude_member_id: int | N
         # Only reject if the membership_id belongs to a DIFFERENT member.
         if member.membership_id == membership_id and member.id != exclude_member_id:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_409_CONFLICT,
                 detail="Membership ID must be unique"
             )
 

@@ -17,7 +17,8 @@ router = APIRouter(prefix="/members", tags=["Members"])
     response_model=MemberResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new member",
-    description="Create a member from a validated request body."
+    description="Create a member from a validated request body.",
+    responses={409: {"description": "Email or membership ID already exists"}}
 )
 def create_member(request: MemberRequest) -> MemberResponse:
     """Create a member from a validated JSON request body."""
@@ -65,7 +66,10 @@ def get_member(member_id: int) -> MemberResponse:
     status_code=status.HTTP_200_OK,
     summary="Update an existing member",
     description="Update all editable fields of an existing member.",
-    responses={404: {"description": "Member not found"}}
+    responses={
+        404: {"description": "Member not found"},
+        409: {"description": "Email or membership ID already exists"}
+        }
 )
 def update_member(member_id: int, request: MemberRequest) -> MemberResponse:
     """Update the editable fields of an existing member."""
@@ -104,7 +108,11 @@ def delete_member(member_id: int) -> None:
     response_model=list[BookResponse],
     status_code=status.HTTP_200_OK,
     summary="Get member's books",
-    description="Retrieve all books borrowed by a specific member."
+    description="Retrieve all books borrowed by a specific member.",
+    responses={
+        404: {"description": "Member not found"},
+        409: {"description": "Member has active books and cannot be deleted"}
+    }
 )
 def get_member_books(member_id: int) -> list[BookResponse]:
     """Return all books associated with the requested member."""
