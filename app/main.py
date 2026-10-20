@@ -2,8 +2,8 @@
 
 
 from fastapi import FastAPI
-from app.routes.books import router as books_router
-from app.routes.members import router as members_router
+from app.routers.books import router as books_router
+from app.routers.members import router as members_router
 
 
 tags_metadata = [

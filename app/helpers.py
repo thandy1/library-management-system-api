@@ -17,16 +17,16 @@ def validate_book_exists(book_id: int) -> None:
 
 
 def validate_isbn(request: BookRequest, exclude_book_id: int | None = None) -> None:
-    """Raise 400 if the ISBN isn't unique."""
+    """Raise 409 if the ISBN isn't unique."""
     if any(book.isbn == request.isbn and book.id != exclude_book_id for book in books.values()):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="ISBN must be unique"
         )
 
 
 def validate_email_unique(email: str, exclude_member_id: int | None = None) -> None:
-    """Raise 400 if email is already in use by another member. 
+    """Raise 409 if email is already in use by another member. 
     
     Args:
         email: Email address to check
@@ -44,7 +44,7 @@ def validate_email_unique(email: str, exclude_member_id: int | None = None) -> N
 
 
 def validate_membership_id_unique(membership_id: str, exclude_member_id: int | None = None) -> None:
-    """Raise 400 if membership_id is already in use."""
+    """Raise 409 if membership_id is already in use."""
     for member in members.values():
         # During updates, allow the same member to keep their existing membership_id.
         # Only reject if the membership_id belongs to a DIFFERENT member.
