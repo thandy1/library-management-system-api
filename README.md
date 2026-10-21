@@ -1,132 +1,166 @@
 # Library Management System API
 
-A REST API for managing library books and members, built with FastAPI and Pydantic. 
+A FastAPI service for managing library books and members. Every book is borrowed by exactly one member. Data is stored in PostgreSQL through SQLAlchemy, with an in-memory backend available for quick local runs.
 
-## Overview
+## Prerequisites
 
-This API allows library staff to:
-- Create, retrieve, update, and delete Book records
-- Create, retrieve, update, and delete Member records
-- Associate Books with Members (one Member can have many Books)
-- Retrieve all Books borrowed by a specific Member
-- Enforce business rules (unique ISBN/email/membership ID, prevent deletion of Members with active Books)
+- Python 3.11 or newer (developed on 3.13)
+- [uv](https://docs.astral.sh/uv/)
+- PostgreSQL running locally
 
-Data is stored in application memory for this milestone. Assignment 2 will add database persistence with SQLAlchemy.
+## PostgreSQL setup
 
-## Tech Stack
+Create a database and a user. Choose your own password and do not commit it.
 
-- **FastAPI** - Modern Python web framework for building REST APIs
-- **Pydantic** - Data validation using Python type hints
-- **Uvicorn** - ASGI server to run the application
-- **Python 3.10+**
-
-## Installation
-
-### 1. Clone the repository
 ```bash
-git clone <your-repo-url>
-cd library-management-system-api
-git switch assignment-1
+sudo -u postgres psql
 ```
 
-### 2. Install project dependencies   
+```sql
+CREATE USER library_user WITH PASSWORD 'choose-a-password';
+CREATE DATABASE library OWNER library_user;
+```
+
+Tables are created automatically on startup.
+
+## Configuration
+
+Copy the example file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Description |
+|---|---|
+| `STORAGE_BACKEND` | `database` (default) or `memory` |
+| `DATABASE_URL` | Required when the backend is `database`. Format: `postgresql+psycopg://<user>:<password>@<host>:<port>/<database>` |
+| `DATABASE_ECHO_SQL` | Optional. `true` logs generated SQL |
+
+`.env` is listed in `.gitignore`. Never commit real credentials. If `STORAGE_BACKEND=database` and `DATABASE_URL` is missing, the app refuses to start.
+
+## Install and run
+
 ```bash
 uv sync
-```
-
-### 3. Running the project
-```bash
 uv run uvicorn app.main:app --reload
 ```
 
-The development server will be available at `http://localhost:8000`.
+- Swagger UI: http://127.0.0.1:8000/docs
+- ReDoc: http://127.0.0.1:8000/redoc
 
-Access the interactive API documentation:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+### Switching storage backends
 
-## Example Requests
+Set `STORAGE_BACKEND` in `.env`, or override it for one run:
 
-### Create a Member
 ```bash
-POST http://localhost:8000/members
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "membership_id": "MEM001",
-  "phone": "555-1234"
-}
+STORAGE_BACKEND=memory uv run uvicorn app.main:app --reload
 ```
 
-### Create a Book
-```bash
-POST http://localhost:8000/books
-Content-Type: application/json
+- `database`: data persists in PostgreSQL across restarts.
+- `memory`: starts with seed data (3 members, 4 books) and resets on every restart. Intended for quick demos only. Memory IDs are max+1; database IDs are never reused.
 
-{
-  "title": "The Great Gatsby",
-  "author": "F. Scott Fitzgerald",
-  "isbn": "9780743273565",
-  "published_year": 1925,
-  "member_id": 1
-}
+## Endpoints
+
+| Method | Path | Success | Errors |
+|---|---|---|---|
+| POST | `/members` | 201 | 409, 422 |
+| GET | `/members` | 200 | |
+| GET | `/members/{id}` | 200 | 404 |
+| PUT | `/members/{id}` | 200 | 404, 409, 422 |
+| DELETE | `/members/{id}` | 204 | 404, 409 |
+| GET | `/members/{id}/books` | 200 | 404 |
+| POST | `/books` | 201 | 404, 409, 422 |
+| GET | `/books` | 200 | |
+| GET | `/books/{id}` | 200 | 404 |
+| PUT | `/books/{id}` | 200 | 404, 409, 422 |
+| DELETE | `/books/{id}` | 204 | 404 |
+
+## Sample requests
+
+Create a member:
+
+```bash
+curl -X POST http://127.0.0.1:8000/members \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Ada Lovelace", "email": "ada@example.com", "membership_id": "M-1001", "phone": "555-123-4567"}'
 ```
 
-### Get All Books
+Create a book borrowed by that member (use the `id` returned above as `member_id`):
+
 ```bash
-GET http://localhost:8000/books
+curl -X POST http://127.0.0.1:8000/books \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Dune", "author": "Frank Herbert", "isbn": "9780441172719", "published_year": 1965, "member_id": 1}'
 ```
 
-### Get Books for a Member
-```bash
-GET http://localhost:8000/members/1/books
-```
+## Business rules and behavior
 
-### Update a Book
-```bash
-PUT http://localhost:8000/books/1
-Content-Type: application/json
+- A book must reference an existing member (404 otherwise).
+- ISBN, member email, and membership ID must each be unique (409 on duplicates).
+- A member who still has books cannot be deleted (409). The database also enforces this with a foreign key (`ON DELETE RESTRICT`).
+- Deleting a book or member returns 204 with no body.
+- Unknown or invalid fields are rejected with 422.
 
-{
-  "title": "The Great Gatsby (Revised)",
-  "author": "F. Scott Fitzgerald",
-  "isbn": "9780743273565",
-  "published_year": 1925,
-  "member_id": 1
-}
-```
+### Change from Assignment 1
 
-### Delete a Book
-```bash
-DELETE http://localhost:8000/books/1
-```
+A duplicate ISBN now returns **409 Conflict** (it was 400). On book update, checks run in the same order as create: book 404, member 404, ISBN 409.
 
-### Delete a Member (only if no active books)
-```bash
-DELETE http://localhost:8000/members/1
-```
+## Design overview
 
-## Project Structure
+- **Routers** are thin HTTP handlers. They call a service and return the result.
+- **Services** hold business rules and raise `NotFoundError` or `ConflictError`, never HTTP errors. `main.py` maps these to 404 and 409.
+- **Service abstraction**: `BookService` and `MemberService` have database and in-memory implementations. The active one is created once at startup and injected with FastAPI dependencies.
+- **Transactions**: each database operation uses one session and one transaction, which commits on success and rolls back on any exception. Repositories only query and flush.
+- **Integrity**: database `IntegrityError`s are translated to `ConflictError` without leaking database details. The in-memory backend uses a lock around every operation.
+
+## Project structure
 
 ```
 library-management-system-api/
 ├── app/
-│   ├── routes/
+│   ├── routers/
 │   │   ├── __init__.py
-│   │   ├── books.py         # Book CRUD endpoints
-│   │   └── members.py       # Member CRUD endpoints
+│   │   ├── books.py
+│   │   └── members.py
 │   ├── schemas/
 │   │   ├── __init__.py
-│   │   ├── book.py          # Book request/response schemas
-│   │   └── member.py        # Member request/response schemas
+│   │   ├── books.py
+│   │   └── members.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── book.py
+│   │   └── member.py
+│   ├── repositories/
+│   │   ├── __init__.py
+│   │   ├── books.py
+│   │   └── members.py
+│   ├── services/
+│   │   ├── books/
+│   │   │   ├── __init__.py
+│   │   │   ├── base.py
+│   │   │   ├── database.py
+│   │   │   └── in_memory.py
+│   │   ├── members/
+│   │   │   ├── __init__.py
+│   │   │   ├── base.py
+│   │   │   ├── database.py
+│   │   │   └── in_memory.py
+│   │   ├── __init__.py
+│   │   ├── in_memory_store.py
+│   │   └── integrity.py
+│   ├── database/
+│   │   ├── __init__.py
+│   │   └── session.py
 │   ├── __init__.py
-│   ├── main.py              # FastAPI app and route registration
-│   ├── helpers.py           # Validation and utility functions
-│   └── storage.py           # In-memory data storage
-├── pyproject.toml           # Project dependencies and metadata
-├── uv.lock                  # Locked dependency versions
-├── README.md                # This file
-└── .gitignore
+│   ├── config.py
+│   ├── dependencies.py
+│   ├── exceptions.py
+│   └── main.py
+├── .env.example
+├── .gitignore
+├── pyproject.toml
+├── uv.lock
+└── README.md
 ```
