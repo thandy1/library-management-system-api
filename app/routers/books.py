@@ -1,95 +1,94 @@
 """HTTP endpoints for the Book resource."""
 
+from fastapi import APIRouter, Depends, Response, status
 
-from fastapi import APIRouter, HTTPException, Response, status
+from app.dependencies import get_book_service
 from app.schemas.books import BookRequest, BookResponse
-from app.schemas.members import MemberResponse
-from app.storage import books, members
-from app.helpers import validate_book_exists, validate_isbn, validate_member_exists
-
+from app.services.books.base import BookService
 
 router = APIRouter(prefix="/books", tags=["Books"])
 
 
-# Create a new book.
 @router.post(
     "",
     response_model=BookResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new book",
     description="Create a book from a validated request body.",
+    responses={
+        404: {"description": "Member not found"},
+        409: {"description": "A book with this ISBN already exists"},
+    },
 )
-def create_book(request: BookRequest) -> BookResponse:
+def create_book(
+    request: BookRequest,
+    service: BookService = Depends(get_book_service),
+) -> BookResponse:
     """Create a book from a validated JSON request body."""
-    validate_member_exists(request.member_id) # Each Book must be associated with exactly one existing Member
-    validate_isbn(request)
-    # GENERATE NEW ID AND CREATE NEW ENTRY
-    new_book_id = max(books.keys(), default=0) + 1
-    new_book = BookResponse(id=new_book_id, **request.model_dump())
-    books[new_book_id] = new_book
-    return new_book
+    return service.create_book(request)
 
-    
-# Retrieve all books.
+
 @router.get(
     "",
     response_model=list[BookResponse],
     status_code=status.HTTP_200_OK,
     summary="List all books",
-    description="Return every book currently stored by the application."
+    description="Return every book currently stored by the application.",
 )
-def get_all_books() -> list[BookResponse]:
-    """Return every book currently stored in memory."""
-    return list(books.values())
+def get_all_books(
+    service: BookService = Depends(get_book_service),
+) -> list[BookResponse]:
+    """Return every stored book."""
+    return service.list_books()
 
 
-# Retrieve one book by its identifier.
 @router.get(
     "/{book_id}",
     response_model=BookResponse,
     status_code=status.HTTP_200_OK,
     summary="Return one book",
     description="Retrieve one book by its identifier.",
-    responses={404: {"description": "Book not found"}}
+    responses={404: {"description": "Book not found"}},
 )
-def get_book(book_id: int) -> BookResponse:
-    """Return the book with the request ID."""
-    validate_book_exists(book_id)
-    return books[book_id]
+def get_book(
+    book_id: int,
+    service: BookService = Depends(get_book_service),
+) -> BookResponse:
+    """Return the book with the requested ID."""
+    return service.get_book(book_id)
 
 
-# Updated an existing book.
 @router.put(
     "/{book_id}",
     response_model=BookResponse,
     status_code=status.HTTP_200_OK,
     summary="Update an existing book",
     description="Update all editable fields of an existing book.",
-    responses={404: {"description": "Book not found"}}
+    responses={
+        404: {"description": "Book or member not found"},
+        409: {"description": "A book with this ISBN already exists"},
+    },
 )
-def update_book(book_id: int, request: BookRequest) -> BookResponse:
+def update_book(
+    book_id: int,
+    request: BookRequest,
+    service: BookService = Depends(get_book_service),
+) -> BookResponse:
     """Update the editable fields of an existing book."""
-    validate_book_exists(book_id)
-    validate_member_exists(request.member_id)
-    validate_isbn(request, exclude_book_id=book_id)
-    updated_book = BookResponse(
-        id=book_id,
-        **request.model_dump()
-    )
-    books[book_id] = updated_book
-    return updated_book
+    return service.update_book(book_id, request)
 
 
-# Delete an existing book.
 @router.delete(
     "/{book_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a book",
-    description="Delete a book from the in-memory storage",
-    responses={404: {"description": "Book not found"}}
+    description="Delete a book by its identifier.",
+    responses={404: {"description": "Book not found"}},
 )
-def delete_book(book_id: int) -> Response:
-    """Delete a book from the in-memory storage."""
-    validate_book_exists(book_id)
-    books.pop(book_id)
+def delete_book(
+    book_id: int,
+    service: BookService = Depends(get_book_service),
+) -> Response:
+    """Delete a book."""
+    service.delete_book(book_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
