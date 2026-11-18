@@ -1,4 +1,4 @@
-"""Shared pytest fixtures (see the professor's conftest for the lifetime diagrams).
+"""Shared pytest fixtures.
 
 Fixture flow: database_client -> reset_database -> db_engine -> postgres_container
 The container and engine live for the whole pytest run; tables are dropped and
