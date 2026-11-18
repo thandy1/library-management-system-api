@@ -2,6 +2,20 @@
 
 from app.models.book import Book
 from app.models.member import Member
+from types import SimpleNamespace
+
+
+class FakeUniqueViolation(Exception):
+    """Stands in for psycopg's UniqueViolation error.
+
+    Real psycopg errors expose `.diag.constraint_name`, the name of the
+    database constraint that was violated. The service reads that name to
+    decide which "must be unique" message to return.
+    """
+
+    def __init__(self, constraint_name: str) -> None:
+        super().__init__(f"duplicate key violates constraint {constraint_name}")
+        self.diag = SimpleNamespace(constraint_name=constraint_name)
 
 
 class FakeTransaction:

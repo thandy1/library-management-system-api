@@ -4,8 +4,6 @@ Repositories and Session are fakes, so no PostgreSQL runs. Real constraint
 behavior is covered later by the Testcontainers integration tests.
 """
 
-from types import SimpleNamespace
-
 import pytest
 from sqlalchemy.exc import IntegrityError
 
@@ -19,6 +17,7 @@ from tests.unit.services.fakes import (
     FakeBookRepository,
     FakeMemberStore,
     FakeSessionFactory,
+    FakeUniqueViolation,
 )
 
 
@@ -84,11 +83,17 @@ def test_create_member_with_duplicate_membership_id_rolls_back(service, members,
 
 
 def test_create_member_translates_database_unique_violation(service, members, factory):
-    # Simulates a race: both checks passed, but PostgreSQL rejected the INSERT.
-    orig = SimpleNamespace(diag=SimpleNamespace(constraint_name="members_email_key"))
-    members.raise_on_add = IntegrityError("INSERT ...", {}, orig)
+    # Simulates a race: both pre-checks passed, but PostgreSQL rejected the INSERT.
+    driver_error = FakeUniqueViolation(constraint_name="members_email_key")
+    members.raise_on_add = IntegrityError(
+        statement="INSERT INTO members ...",
+        params={},
+        orig=driver_error,
+    )
+
     with pytest.raises(ConflictError, match="Email must be unique"):
         service.create_member(member_request())
+
     assert factory.session.rolled_back
 
 
