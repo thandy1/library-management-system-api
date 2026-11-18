@@ -12,3 +12,11 @@ dependencies = [
     "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.15.0",
 ]
+
+[dependency-groups]
+dev = [
+    "openapi-spec-validator>=0.9.0",
+    "pytest>=9.2.0",
+    "schemathesis>=4.33.4",
+    "testcontainers[postgres]>=4.15.0",
+]
