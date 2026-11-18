@@ -1,6 +1,6 @@
 """FastAPI dependencies that authenticate Bearer tokens and enforce roles."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -8,6 +8,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.auth.users import AuthenticatedUser, Role, get_user_for_token
 from app.config import Settings
 from app.dependencies import get_settings
+
+ResponseDocs = dict[int | str, dict[str, Any]]
 
 # auto_error=False lets us return our own 401 (with WWW-Authenticate) instead
 # of FastAPI's default. The scheme also publishes Bearer security to OpenAPI,
@@ -18,7 +20,7 @@ BearerCredentials = Annotated[
 ]
 
 # Reused in router decorators so OpenAPI documents what the code returns.
-UNAUTHORIZED_RESPONSE = {
+UNAUTHORIZED_RESPONSE: dict[str, Any] = {
     "description": "Missing or invalid Bearer token",
     "headers": {
         "WWW-Authenticate": {
@@ -27,9 +29,9 @@ UNAUTHORIZED_RESPONSE = {
         }
     },
 }
-FORBIDDEN_RESPONSE = {"description": "Administrator role required"}
-AUTHENTICATED_RESPONSES = {401: UNAUTHORIZED_RESPONSE}
-ADMIN_RESPONSES = {401: UNAUTHORIZED_RESPONSE, 403: FORBIDDEN_RESPONSE}
+FORBIDDEN_RESPONSE: dict[str, Any] = {"description": "Administrator role required"}
+AUTHENTICATED_RESPONSES: ResponseDocs = {401: UNAUTHORIZED_RESPONSE}
+ADMIN_RESPONSES: ResponseDocs = {401: UNAUTHORIZED_RESPONSE, 403: FORBIDDEN_RESPONSE}
 
 AppSettings = Annotated[Settings, Depends(get_settings)]
 
