@@ -259,8 +259,6 @@ library-management-system-api/
 │   │   ├── test_negative_requests.py
 │   │   └── test_openapi_contract.py
 │   └── conftest.py
-├── docs/
-│   └── notes.md
 ├── .env.example
 ├── .gitignore
 ├── pyproject.toml
