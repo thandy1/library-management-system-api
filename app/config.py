@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     database_url: str | None = None
     database_echo_sql: bool = False
     storage_backend: StorageBackend = StorageBackend.DATABASE
+    # Fixed classroom Bearer tokens. Each maps to one predefined request role.
+    # These are demonstration values only, not a real credential store.
+    demo_member_token: str = ""
+    demo_admin_token: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",
