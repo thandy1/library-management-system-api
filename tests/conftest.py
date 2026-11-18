@@ -77,8 +77,13 @@ def db_session(
 
 
 @pytest.fixture
-def database_client(reset_database: None) -> Generator[TestClient, None, None]:
+def database_client(
+    reset_database: None, monkeypatch: pytest.MonkeyPatch
+) -> Generator[TestClient, None, None]:
     """TestClient running the real app against the temporary database."""
+    # Select the database backend explicitly; the default may be in-memory.
+    monkeypatch.setenv("STORAGE_BACKEND", "database")
+
     from app.main import app
 
     with TestClient(app) as test_client:
