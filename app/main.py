@@ -67,5 +67,28 @@ async def conflict_handler(request: Request, exc: ConflictError):
     return JSONResponse(status_code=409, content={"detail": exc.message})
 
 
+# Public endpoints: no auth dependency, so no token is required.
+@app.get(
+    "/",
+    tags=["Public"],
+    summary="API root",
+    description="Return basic API information. No authentication required.",
+)
+def read_root() -> dict[str, str]:
+    """Identify the API and point callers to the documentation."""
+    return {"name": "Library Management System API", "docs": "/docs"}
+
+
+@app.get(
+    "/health",
+    tags=["Public"],
+    summary="Health check",
+    description="Report that the API process is running. No authentication required.",
+)
+def read_health() -> dict[str, str]:
+    """Report liveness only; it does not query the database."""
+    return {"status": "ok"}
+
+
 app.include_router(books_router)
 app.include_router(members_router)
