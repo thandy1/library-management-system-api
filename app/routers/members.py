@@ -6,17 +6,28 @@ from app.dependencies import get_member_service
 from app.schemas.books import BookResponse
 from app.schemas.members import MemberRequest, MemberResponse
 from app.services.members.base import MemberService
+from app.auth.dependencies import (
+    ADMIN_RESPONSES,
+    AUTHENTICATED_RESPONSES,
+    get_current_user,
+    require_admin,
+)
 
 router = APIRouter(prefix="/members", tags=["Members"])
 
 
+# POST /members (admin only)
 @router.post(
     "",
     response_model=MemberResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new member",
     description="Create a member from a validated request body.",
-    responses={409: {"description": "Email or membership ID already exists"}},
+    dependencies=[Depends(require_admin)],
+    responses={
+        **ADMIN_RESPONSES,
+        409: {"description": "Email or membership ID already exists"}
+    },
 )
 def create_member(
     request: MemberRequest,
@@ -26,12 +37,15 @@ def create_member(
     return service.create_member(request)
 
 
+# GET /members (any valid token)
 @router.get(
     "",
     response_model=list[MemberResponse],
     status_code=status.HTTP_200_OK,
     summary="List all members",
     description="Return every member currently stored by the application.",
+    dependencies=[Depends(get_current_user)],
+    responses=AUTHENTICATED_RESPONSES,
 )
 def get_all_members(
     service: MemberService = Depends(get_member_service),
@@ -40,13 +54,18 @@ def get_all_members(
     return service.list_members()
 
 
+# GET /members/{member_id} (any valid token)
 @router.get(
     "/{member_id}",
     response_model=MemberResponse,
     status_code=status.HTTP_200_OK,
     summary="Return one member",
     description="Retrieve one member by its identifier.",
-    responses={404: {"description": "Member not found"}},
+    dependencies=[Depends(get_current_user)],
+    responses={
+        **AUTHENTICATED_RESPONSES,
+        404: {"description": "Member not found"}
+    },
 )
 def get_member(
     member_id: int,
@@ -56,13 +75,16 @@ def get_member(
     return service.get_member(member_id)
 
 
+# PUT /members/{member_id} (admin only)
 @router.put(
     "/{member_id}",
     response_model=MemberResponse,
     status_code=status.HTTP_200_OK,
     summary="Update an existing member",
     description="Update all editable fields of an existing member.",
+    dependencies=[Depends(require_admin)],
     responses={
+        **ADMIN_RESPONSES,
         404: {"description": "Member not found"},
         409: {"description": "Email or membership ID already exists"},
     },
@@ -76,12 +98,15 @@ def update_member(
     return service.update_member(member_id, request)
 
 
+# DELETE /members/{member_id} (admin only)
 @router.delete(
     "/{member_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a member",
     description="Delete a member by its identifier.",
+    dependencies=[Depends(require_admin)],
     responses={
+        **ADMIN_RESPONSES,
         404: {"description": "Member not found"},
         409: {"description": "Member has active books and cannot be deleted"},
     },
@@ -95,13 +120,18 @@ def delete_member(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+# GET /members/{member_id}/books (any valid token)
 @router.get(
     "/{member_id}/books",
     response_model=list[BookResponse],
     status_code=status.HTTP_200_OK,
     summary="Get member's books",
     description="Retrieve all books borrowed by a specific member.",
-    responses={404: {"description": "Member not found"}},
+    dependencies=[Depends(get_current_user)],
+    responses={
+        **AUTHENTICATED_RESPONSES,
+        404: {"description": "Member not found"}
+    },
 )
 def get_member_books(
     member_id: int,

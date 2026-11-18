@@ -14,6 +14,7 @@ from app.auth.dependencies import (
 
 router = APIRouter(prefix="/books", tags=["Books"])
 
+
 # POST /books (admin only)
 @router.post(
     "",
@@ -35,6 +36,7 @@ def create_book(
     """Create a book from a validated JSON request body."""
     return service.create_book(request)
 
+
 # GET /books (any valid token)
 @router.get(
     "",
@@ -50,6 +52,7 @@ def get_all_books(
 ) -> list[BookResponse]:
     """Return every stored book."""
     return service.list_books()
+
 
 # GET /books/{book_id} (any valid token)
 @router.get(
@@ -70,6 +73,7 @@ def get_book(
 ) -> BookResponse:
     """Return the book with the requested ID."""
     return service.get_book(book_id)
+
 
 # PUT /books/{book_id} (admin only)
 @router.put(
@@ -92,6 +96,7 @@ def update_book(
 ) -> BookResponse:
     """Update the editable fields of an existing book."""
     return service.update_book(book_id, request)
+
 
 # DELETE /books/{book_id} (admin only)
 @router.delete(
