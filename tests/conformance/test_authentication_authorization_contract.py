@@ -29,15 +29,6 @@ def book_payload(member_id: int) -> dict:
     }
 
 
-@pytest.fixture(params=["database", "memory"])
-def client(request: pytest.FixtureRequest) -> TestClient:
-    """Client without default headers, for each storage backend.
-
-    getfixturevalue is lazy, so Docker only starts for the database variant.
-    """
-    return request.getfixturevalue(f"{request.param}_client")
-
-
 def snapshot(client: TestClient, admin_headers: dict[str, str]) -> dict:
     """Capture all stored Books and Members for before/after comparison."""
     return {
