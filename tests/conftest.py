@@ -138,3 +138,21 @@ def member_client(database_client: TestClient, member_headers: dict[str, str]) -
     """Database-backed client sending the member token by default."""
     database_client.headers.update(member_headers)
     return database_client
+
+
+@pytest.fixture
+def memory_admin_client(
+    memory_client: TestClient, admin_headers: dict[str, str]
+) -> TestClient:
+    """In-memory client sending the admin token by default."""
+    memory_client.headers.update(admin_headers)
+    return memory_client
+
+
+@pytest.fixture
+def memory_member_client(
+    memory_client: TestClient, member_headers: dict[str, str]
+) -> TestClient:
+    """In-memory client sending the member token by default."""
+    memory_client.headers.update(member_headers)
+    return memory_client
