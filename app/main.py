@@ -22,6 +22,7 @@ from app.services.members.in_memory import InMemoryMemberService
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = Settings()
+    app.state.settings = settings  # lets dependencies read the same Settings instance
     engine = None
 
     if settings.storage_backend == StorageBackend.DATABASE:
